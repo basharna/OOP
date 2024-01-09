@@ -1,13 +1,14 @@
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class GameLogic implements PlayableLogic {
 
     public static int BOARD_SIZE = 11;
     private final ConcretePlayer attacker = new ConcretePlayer(true);
     private final ConcretePlayer defender = new ConcretePlayer(false);
+    private final Position[][] positions;
     private ConcretePiece[][] board;
-    private Position[][] positions;
     private boolean isFinished;
     private boolean attackerTurn = true;
 
@@ -17,13 +18,78 @@ public class GameLogic implements PlayableLogic {
     }
     @Override
     public boolean move(Position a, Position b) {
+        Piece curr = board[a.getX()][a.getY()];
+        if(isIllegal(a ,b) || attackerTurn && curr.getOwner() == defender || !attackerTurn && curr.getOwner() == attacker){
+            return false;
+        }
         int x = a.getX();
         int y = a.getY();
         ConcretePiece temp = this.board[x][y];
         this.board[b.getX()][b.getY()] = temp;
         this.board[x][y] = null;
+        attackerTurn = !attackerTurn;
         return true;
     }
+
+    private boolean isIllegal(Position a, Position b) {
+        int aX = a.getX();
+        int aY = a.getY();
+        int bX = b.getX();
+        int bY = b.getY();
+        // Check if moving diagonally
+        if (aX != bX && aY != bY) {
+            return true;
+        }
+
+        if(board[bX][bY] != null || (this.isCorner(b) && this.board[a.getX()][a.getY()] instanceof Pawn)){
+            return true;
+        }else {
+            if (a.getX() == b.getX()){
+                if (aY < bY){
+                    for(int i = aY+1; i < bY; i++){
+                        if(board[aX][i] != null){
+                            return true;
+                        }
+                    }
+                } else if (aY > bY) {
+                    for(int i = aY-1; i > bY; i--){
+                        if(board[aX][i] != null){
+                            return true;
+                        }
+                    }
+                }
+
+            } else if (a.getY() == b.getY()) {
+                if (aX < bX){
+                    for(int i = aX+1; i < bX; i++){
+                        if(board[i][aY] != null){
+                            return true;
+                        }
+                    }
+                } else if (aX > bX) {
+                    for(int i = aX-1; i > bX; i--){
+                        if(board[i][aY] != null){
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isCorner(Position b) {
+        int x = b.getX();
+        int y = b.getY();
+
+        boolean isTopLeft = (x == 0 && y == 0);
+        boolean isTopRight = (x == 10 && y == 0);
+        boolean isBottomLeft = (x == 0 && y == 10);
+        boolean isBottomRight = (x == 10 && y == 10);
+
+        return isTopLeft || isTopRight || isBottomLeft || isBottomRight;
+    }
+
 
     @Override
     public Piece getPieceAtPosition(Position position) {
@@ -47,7 +113,7 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean isSecondPlayerTurn() {
-        return !this.attackerTurn;
+        return this.attackerTurn;
     }
 
     @Override
