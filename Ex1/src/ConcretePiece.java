@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConcretePiece implements Piece{
+public abstract class ConcretePiece implements Piece{
     protected Player owner;
     private final List<Position> history = new ArrayList<>();
     @Override

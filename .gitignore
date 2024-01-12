@@ -27,3 +27,4 @@ replay_pid*
 .idea
 *.iml
 *.txt
+!/Ex1/src/GameLogic.java

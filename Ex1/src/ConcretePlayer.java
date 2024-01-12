@@ -1,5 +1,5 @@
 public class ConcretePlayer implements Player{
-    private boolean isAttacker;
+    private final boolean isAttacker;
     int wins;
 
     public ConcretePlayer(boolean isAttacker) {
@@ -14,5 +14,9 @@ public class ConcretePlayer implements Player{
     @Override
     public int getWins() {
         return this.wins;
+    }
+
+    public void updateWins(){
+        this.wins++;
     }
 }

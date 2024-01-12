@@ -5,7 +5,7 @@ public class Pawn extends ConcretePiece{
         this.kills = 0;
     }
 
-    public void kill(){
+    public void updateKills(){
         this.kills++;
     }
 
