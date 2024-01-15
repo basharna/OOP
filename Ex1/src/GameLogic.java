@@ -3,23 +3,25 @@ import java.util.Stack;
 public class GameLogic implements PlayableLogic {
 
     public static int BOARD_SIZE = 11;
-    private final ConcretePlayer attacker = new ConcretePlayer(true);
-    private final ConcretePlayer defender = new ConcretePlayer(false);
+    private final ConcretePlayer attacker, defender;
     private ConcretePiece[][] board;
     private Stack<ConcretePiece[][]> boardHistory;
     private boolean isFinished;
     private boolean attackerTurn = true;
-    private int attackerPieces;
+    private int attackerKilled;
 
     public GameLogic() {
         this.boardHistory = new Stack<>();
+        this.attacker = new ConcretePlayer(true);
+        this.defender = new ConcretePlayer(false);
         this.reset();
     }
 
     @Override
     public boolean move(Position a, Position b) {
         Piece curr = board[a.getX()][a.getY()];
-        if (isIllegal(a, b) || attackerTurn && curr.getOwner() == defender || !attackerTurn && curr.getOwner() == attacker) {
+        Player opponentPlayer = attackerTurn ? defender : attacker;
+        if (curr.getOwner() == opponentPlayer || isIllegal(a, b)) {
             return false;
         }
         saveGameState();
@@ -29,12 +31,12 @@ public class GameLogic implements PlayableLogic {
         this.board[b.getX()][b.getY()] = temp;
         temp.updatePosition(b);
         this.board[x][y] = null;
-        checkCapture(b);
+        checkMove(b);
         attackerTurn = !attackerTurn;
         return true;
     }
 
-    private void checkCapture(Position b) {
+    private void checkMove(Position b) {
         if (isCorner(b)) {
             winGame(defender);
         } else {
@@ -49,10 +51,10 @@ public class GameLogic implements PlayableLogic {
                         isKingSurrounded(x - 1, y);
                     } else {
                         if (this.board[x - 1][y].getOwner() == attacker) {
-                            this.attackerPieces++;
+                            this.attackerKilled++;
                         }
                         this.board[x - 1][y] = null;
-                        ((Pawn) this.board[x][y]).updateKills();
+                        ((Pawn)this.board[x][y]).updateKills();
                     }
                 }
 
@@ -62,7 +64,7 @@ public class GameLogic implements PlayableLogic {
                         isKingSurrounded(x + 1, y);
                     } else {
                         if (this.board[x + 1][y].getOwner() == attacker) {
-                            this.attackerPieces++;
+                            this.attackerKilled++;
                         }
                         this.board[x + 1][y] = null;
                         ((Pawn) this.board[x][y]).updateKills();
@@ -76,7 +78,7 @@ public class GameLogic implements PlayableLogic {
                         isKingSurrounded(x, y - 1);
                     } else {
                         if (this.board[x][y - 1].getOwner() == attacker) {
-                            this.attackerPieces++;
+                            this.attackerKilled++;
                         }
                         this.board[x][y - 1] = null;
                         ((Pawn) this.board[x][y]).updateKills();
@@ -89,14 +91,14 @@ public class GameLogic implements PlayableLogic {
                         isKingSurrounded(x, y + 1);
                     } else {
                         if (this.board[x][y + 1].getOwner() == attacker) {
-                            this.attackerPieces++;
+                            this.attackerKilled++;
                         }
                         this.board[x][y + 1] = null;
                         ((Pawn) this.board[x][y]).updateKills();
                     }
                 }
             }
-            if (attackerPieces == 24) {
+            if (attackerKilled == 24) {
                 winGame(defender);
             }
         }
@@ -175,6 +177,7 @@ public class GameLogic implements PlayableLogic {
         int aY = a.getY();
         int bX = b.getX();
         int bY = b.getY();
+
         // Check if moving diagonally
         if (aX != bX && aY != bY) {
             return true;
@@ -249,47 +252,37 @@ public class GameLogic implements PlayableLogic {
         this.board = new ConcretePiece[BOARD_SIZE][BOARD_SIZE];
         this.isFinished = false;
         this.attackerTurn = true;
-        this.attackerPieces = 0;
+        this.attackerKilled = 0;
         this.boardHistory = new Stack<>();
 
-        //set attacker left pieces
-        for (int i = 3; i <= 7; i++) {
+        //set attacker pieces
+        for (int i=3;i<=7;i++) {
             this.board[0][i] = new Pawn(attacker);
-        }
-        this.board[1][5] = new Pawn(attacker);
-
-        //set attacker top pieces
-        for (int i = 3; i <= 7; i++) {
+            this.board[i][10] = new Pawn(attacker);
             this.board[i][0] = new Pawn(attacker);
-        }
-        this.board[5][1] = new Pawn(attacker);
-
-        //set attacker right pieces
-        for (int i = 3; i <= 7; i++) {
             this.board[10][i] = new Pawn(attacker);
         }
-        this.board[9][5] = new Pawn(attacker);
+        this.board[1][5]= new Pawn(attacker);
+        this.board[5][1]= new Pawn(attacker);
+        this.board[5][9]= new Pawn(attacker);
+        this.board[9][5]= new Pawn(attacker);
 
-        //set attacker bottom pieces
-        for (int i = 3; i <= 7; i++) {
-            this.board[i][10] = new Pawn(attacker);
+        //set the defender pieces
+        this.board[3][5]= new Pawn(defender);
+        this.board[7][5]= new Pawn(defender);
+
+        for (int i=4;i<=6;i++){
+            this.board[4][i]= new Pawn(defender);
         }
-        this.board[5][9] = new Pawn(attacker);
-
-        //set defender pieces
-        this.board[5][3] = new Pawn(defender);
-        this.board[3][5] = new Pawn(defender);
-        this.board[5][7] = new Pawn(defender);
-        this.board[7][5] = new Pawn(defender);
-        for (int i = 4; i <= 6; i++) {
-            for (int j = 4; j <= 6; j++) {
-                if (j == 5 && i == 5) {
-                    this.board[i][j] = new King(defender);
-                } else {
-                    this.board[i][j] = new Pawn(defender);
-                }
+        for (int i=3;i<=7;i++){
+            if (i != 5) {
+                this.board[5][i] = new Pawn(defender);
             }
         }
+        for (int i=4;i<=6;i++){
+            this.board[6][i]= new Pawn(defender);
+        }
+        this.board[5][5]= new King(defender);
 
     }
 

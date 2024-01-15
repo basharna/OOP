@@ -3,7 +3,12 @@ import java.util.List;
 
 public abstract class ConcretePiece implements Piece{
     protected Player owner;
-    private final List<Position> history = new ArrayList<>();
+    private final List<Position> history;
+
+    protected ConcretePiece() {
+        history = new ArrayList<>();
+    }
+
     @Override
     public Player getOwner() {
         return this.owner;
@@ -14,7 +19,5 @@ public abstract class ConcretePiece implements Piece{
     }
 
     @Override
-    public String getType() {
-        return null;
-    }
+    public abstract String getType();
 }
