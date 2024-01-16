@@ -10,32 +10,32 @@ public class GameLogic implements PlayableLogic {
     private boolean attackerTurn = true;
     private int attackerKilled;
 
+    //Constructor
     public GameLogic() {
-        this.boardHistory = new Stack<>();
         this.attacker = new ConcretePlayer(true);
         this.defender = new ConcretePlayer(false);
-        this.reset();
+        setNewBoard();
     }
 
     @Override
     public boolean move(Position a, Position b) {
-        Piece curr = board[a.getX()][a.getY()];
+        int x = a.getX();
+        int y = a.getY();
+        ConcretePiece curr = board[x][y];
         Player opponentPlayer = attackerTurn ? defender : attacker;
         if (curr.getOwner() == opponentPlayer || isIllegal(a, b)) {
             return false;
         }
         saveGameState();
-        int x = a.getX();
-        int y = a.getY();
-        ConcretePiece temp = this.board[x][y];
-        this.board[b.getX()][b.getY()] = temp;
-        temp.updatePosition(b);
+        this.board[b.getX()][b.getY()] = curr;
+        curr.updatePosition(b);
         this.board[x][y] = null;
         checkMove(b);
         attackerTurn = !attackerTurn;
         return true;
     }
 
+    //checks whether a piece should be captured or win game
     private void checkMove(Position b) {
         if (isCorner(b)) {
             winGame(defender);
@@ -135,6 +135,7 @@ public class GameLogic implements PlayableLogic {
                 (isCorner(new Position(secondAdjacentX, currentY)));
     }
 
+    //checks if a position is on the edge of the board
     private boolean isEdge(int x, int y) {
         return x == 0 || x == BOARD_SIZE - 1 || y == 0 || y == BOARD_SIZE - 1;
     }
@@ -172,6 +173,7 @@ public class GameLogic implements PlayableLogic {
 
     }
 
+    //checks whether a move is illegal
     private boolean isIllegal(Position a, Position b) {
         int aX = a.getX();
         int aY = a.getY();
@@ -209,6 +211,7 @@ public class GameLogic implements PlayableLogic {
         return false;
     }
 
+    //checks if a position is in the corner of the board
     private boolean isCorner(Position b) {
         int x = b.getX();
         int y = b.getY();
@@ -249,6 +252,10 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void reset() {
+        setNewBoard();
+    }
+
+    private void setNewBoard() {
         this.board = new ConcretePiece[BOARD_SIZE][BOARD_SIZE];
         this.isFinished = false;
         this.attackerTurn = true;
@@ -256,49 +263,43 @@ public class GameLogic implements PlayableLogic {
         this.boardHistory = new Stack<>();
 
         //set attacker pieces
-        for (int i=3;i<=7;i++) {
+        for (int i = 3; i <= 7; i++) {
             this.board[0][i] = new Pawn(attacker);
             this.board[i][10] = new Pawn(attacker);
             this.board[i][0] = new Pawn(attacker);
             this.board[10][i] = new Pawn(attacker);
         }
-        this.board[1][5]= new Pawn(attacker);
-        this.board[5][1]= new Pawn(attacker);
-        this.board[5][9]= new Pawn(attacker);
-        this.board[9][5]= new Pawn(attacker);
+        this.board[1][5] = new Pawn(attacker);
+        this.board[5][1] = new Pawn(attacker);
+        this.board[5][9] = new Pawn(attacker);
+        this.board[9][5] = new Pawn(attacker);
 
         //set the defender pieces
-        this.board[3][5]= new Pawn(defender);
-        this.board[7][5]= new Pawn(defender);
+        this.board[3][5] = new Pawn(defender);
+        this.board[7][5] = new Pawn(defender);
 
-        for (int i=4;i<=6;i++){
-            this.board[4][i]= new Pawn(defender);
+        for (int i = 4; i <= 6; i++) {
+            this.board[4][i] = new Pawn(defender);
         }
-        for (int i=3;i<=7;i++){
+        for (int i = 3; i <= 7; i++) {
             if (i != 5) {
                 this.board[5][i] = new Pawn(defender);
             }
         }
-        for (int i=4;i<=6;i++){
-            this.board[6][i]= new Pawn(defender);
+        for (int i = 4; i <= 6; i++) {
+            this.board[6][i] = new Pawn(defender);
         }
-        this.board[5][5]= new King(defender);
-
+        this.board[5][5] = new King(defender);
     }
 
     @Override
     public void undoLastMove() {
         if (!boardHistory.isEmpty()) {
             // Pop the previous state from the move history
-            // Restore the board and game state to the previous state
             this.board = boardHistory.pop();
 
             // Toggle the turn back
             attackerTurn = !attackerTurn;
-
-            System.out.println("Undoing last move");
-        } else {
-            System.out.println("No moves to undo");
         }
     }
 
