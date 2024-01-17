@@ -3,6 +3,7 @@ public class Pawn extends ConcretePiece{
     public Pawn(Player owner){
         this.owner = owner;
         this.kills = 0;
+        addPieceToArray(this);
     }
 
     public void updateKills(){

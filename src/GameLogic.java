@@ -1,5 +1,6 @@
 import java.util.Stack;
 
+
 public class GameLogic implements PlayableLogic {
 
     public static int BOARD_SIZE = 11;
@@ -22,6 +23,9 @@ public class GameLogic implements PlayableLogic {
         int x = a.getX();
         int y = a.getY();
         ConcretePiece curr = board[x][y];
+        if (curr.getHistory().isEmpty()){
+            curr.updatePosition(a);
+        }
         Player opponentPlayer = attackerTurn ? defender : attacker;
         if (curr.getOwner() == opponentPlayer || isIllegal(a, b)) {
             return false;
@@ -105,8 +109,18 @@ public class GameLogic implements PlayableLogic {
     }
 
     private void winGame(ConcretePlayer player) {
+        printStats(player);
         this.isFinished = true;
         player.updateWins();
+    }
+
+    private void printStats(ConcretePlayer player) {
+        ConcretePlayer loser = player.isPlayerOne() ? attacker : defender;
+        Printer.printBoard(ConcretePiece.getPieces(player));
+        Printer.printBoard(ConcretePiece.getPieces(loser));
+        for (int i = 0; i < 75; i++) {
+            System.out.print("*");
+        }
     }
 
     private boolean checkAdjacentPieces(int currentX, int currentY, int deltaX, int deltaY) {
@@ -117,7 +131,7 @@ public class GameLogic implements PlayableLogic {
         int firstAdjacentY = currentY + deltaY;
         ConcretePiece firstAdjacentPiece = board[firstAdjacentX][firstAdjacentY];
 
-        if (firstAdjacentPiece == null || firstAdjacentPiece.getOwner().isPlayerOne() == currentPiece.getOwner().isPlayerOne()) {
+        if (firstAdjacentPiece == null || firstAdjacentPiece.getOwner() == currentPiece.getOwner()) {
             return false;
         }
 
@@ -130,9 +144,9 @@ public class GameLogic implements PlayableLogic {
         }
 
         // Check conditions for both adjacent pieces
-        return (isEdge(firstAdjacentX, firstAdjacentY)) ||
-                (secondAdjacentPiece != null && secondAdjacentPiece.getOwner().isPlayerOne() == currentPiece.getOwner().isPlayerOne()) ||
-                (isCorner(new Position(secondAdjacentX, currentY)));
+        return (isEdge(firstAdjacentX, firstAdjacentY) && !isEdge(currentX, currentY)) ||
+                (secondAdjacentPiece != null && secondAdjacentPiece.getOwner() == currentPiece.getOwner()) ||
+                (isCorner(new Position(secondAdjacentX, secondAdjacentY)));
     }
 
     //checks if a position is on the edge of the board
@@ -146,22 +160,22 @@ public class GameLogic implements PlayableLogic {
         int surroundingCount = 0;
 
         // Check left side
-        if (x > 0 && board[x - 1][y] != null && board[x - 1][y].getOwner() == attacker) {
+        if (x != 0 && board[x - 1][y] != null && board[x - 1][y].getOwner() == attacker) {
             surroundingCount++;
         }
 
         // Check right side
-        if (x < BOARD_SIZE - 1 && board[x + 1][y] != null && board[x + 1][y].getOwner() == attacker) {
+        if (x != 10 && board[x + 1][y] != null && board[x + 1][y].getOwner() == attacker) {
             surroundingCount++;
         }
 
         // Check top side
-        if (y > 0 && board[x][y - 1] != null && board[x][y - 1].getOwner() == attacker) {
+        if (y !=  0 && board[x][y - 1] != null && board[x][y - 1].getOwner() == attacker) {
             surroundingCount++;
         }
 
         // Check bottom side
-        if (y < BOARD_SIZE - 1 && board[x][y + 1] != null && board[x][y + 1].getOwner() == attacker) {
+        if (y != 10 && board[x][y + 1] != null && board[x][y + 1].getOwner() == attacker) {
             surroundingCount++;
         }
 
@@ -188,20 +202,15 @@ public class GameLogic implements PlayableLogic {
         if (board[bX][bY] != null || (this.isCorner(b) && this.board[a.getX()][a.getY()] instanceof Pawn)) {
             return true;
         } else {
-            int min;
-            int max;
+            //check obstacle
             if (a.getX() == b.getX()) {
-                min = Math.min(aY, bY);
-                max = Math.max(aY, bY);
-                for (int i = min + 1; i < max; i++) {
+                for (int i = Math.min(aY, bY) + 1; i < Math.max(aY, bY); i++) {
                     if (board[aX][i] != null) {
                         return true;
                     }
                 }
             } else {
-                min = Math.min(aX, bX);
-                max = Math.max(aX, bX);
-                for (int i = min + 1; i < max; i++) {
+                for (int i = Math.min(aX, bX) + 1; i < Math.max(aX, bX); i++) {
                     if (board[i][aY] != null) {
                         return true;
                     }
@@ -280,16 +289,31 @@ public class GameLogic implements PlayableLogic {
 
         for (int i = 4; i <= 6; i++) {
             this.board[4][i] = new Pawn(defender);
+            this.board[6][i] = new Pawn(defender);
         }
         for (int i = 3; i <= 7; i++) {
             if (i != 5) {
                 this.board[5][i] = new Pawn(defender);
             }
         }
-        for (int i = 4; i <= 6; i++) {
-            this.board[6][i] = new Pawn(defender);
-        }
         this.board[5][5] = new King(defender);
+
+        //set each Piece Id
+        int attackerId = 1, defenderId = 1;
+        for (int i = 0; i < board.length; i++){
+            for (int j = 0; j < board[0].length; j++){
+                ConcretePiece curr = this.board[j][i];
+                if (curr != null) {
+                    if (curr.getOwner() == attacker) {
+                        curr.setId(attackerId);
+                        attackerId++;
+                    }else {
+                        curr.setId(defenderId);
+                        defenderId++;
+                    }
+                }
+            }
+        }
     }
 
     @Override
