@@ -6,8 +6,12 @@ public class Pawn extends ConcretePiece{
         addPieceToArray(this);
     }
 
-    public void updateKills(){
+    public void incrementKills(){
         this.kills++;
+    }
+
+    public void decrementKills(){
+        this.kills--;
     }
 
     public int getKills(){

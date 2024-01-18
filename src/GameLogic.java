@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Stack;
 
 
@@ -6,10 +7,11 @@ public class GameLogic implements PlayableLogic {
     public static int BOARD_SIZE = 11;
     private final ConcretePlayer attacker, defender;
     private ConcretePiece[][] board;
-    private Stack<ConcretePiece[][]> boardHistory;
+    private Stack<MoveSnapshot> boardHistory;
     private boolean isFinished;
     private boolean attackerTurn = true;
     private int attackerKilled;
+    private ConcretePiece lastKillingPawn;
 
     //Constructor
     public GameLogic() {
@@ -27,7 +29,8 @@ public class GameLogic implements PlayableLogic {
             curr.updatePosition(a);
         }
         Player opponentPlayer = attackerTurn ? defender : attacker;
-        if (curr.getOwner() == opponentPlayer || isIllegal(a, b)) {
+        boolean isIllegal = isIllegal(a, b);
+        if (curr.getOwner() == opponentPlayer || isIllegal) {
             return false;
         }
         saveGameState();
@@ -35,6 +38,7 @@ public class GameLogic implements PlayableLogic {
         curr.updatePosition(b);
         this.board[x][y] = null;
         checkMove(b);
+        boardHistory.peek().setLastKillingPawn(lastKillingPawn);
         attackerTurn = !attackerTurn;
         return true;
     }
@@ -58,7 +62,8 @@ public class GameLogic implements PlayableLogic {
                             this.attackerKilled++;
                         }
                         this.board[x - 1][y] = null;
-                        ((Pawn)this.board[x][y]).updateKills();
+                        ((Pawn)this.board[x][y]).incrementKills();
+                        lastKillingPawn = this.board[x][y];
                     }
                 }
 
@@ -71,7 +76,8 @@ public class GameLogic implements PlayableLogic {
                             this.attackerKilled++;
                         }
                         this.board[x + 1][y] = null;
-                        ((Pawn) this.board[x][y]).updateKills();
+                        ((Pawn) this.board[x][y]).incrementKills();
+                        lastKillingPawn = this.board[x][y];
 
                     }
                 }
@@ -85,7 +91,8 @@ public class GameLogic implements PlayableLogic {
                             this.attackerKilled++;
                         }
                         this.board[x][y - 1] = null;
-                        ((Pawn) this.board[x][y]).updateKills();
+                        ((Pawn) this.board[x][y]).incrementKills();
+                        lastKillingPawn = this.board[x][y];
                     }
                 }
 
@@ -98,7 +105,8 @@ public class GameLogic implements PlayableLogic {
                             this.attackerKilled++;
                         }
                         this.board[x][y + 1] = null;
-                        ((Pawn) this.board[x][y]).updateKills();
+                        ((Pawn) this.board[x][y]).incrementKills();
+                        lastKillingPawn = this.board[x][y];
                     }
                 }
             }
@@ -114,13 +122,28 @@ public class GameLogic implements PlayableLogic {
         player.updateWins();
     }
 
-    private void printStats(ConcretePlayer player) {
-        ConcretePlayer loser = player.isPlayerOne() ? attacker : defender;
-        Printer.printBoard(ConcretePiece.getPieces(player));
-        Printer.printBoard(ConcretePiece.getPieces(loser));
+    private void printStats(ConcretePlayer winner) {
+        ConcretePlayer loser = winner.isPlayerOne() ? attacker : defender;
+
+        //print pieces history
+        Printer.printHistory(ConcretePiece.getPieces(winner));
+        Printer.printHistory(ConcretePiece.getPieces(loser));
+
+        //print separator
         for (int i = 0; i < 75; i++) {
             System.out.print("*");
         }
+        System.out.println();
+
+        //print pieces kills
+        ArrayList<ConcretePiece> mergedPieces = new ArrayList<>(ConcretePiece.getPieces(attacker));
+        mergedPieces.addAll(ConcretePiece.getPieces(defender));
+        Printer.printKills(mergedPieces, winner);
+
+        //print pieces distance
+        Printer.printDist(mergedPieces, winner);
+
+
     }
 
     private boolean checkAdjacentPieces(int currentX, int currentY, int deltaX, int deltaY) {
@@ -266,6 +289,7 @@ public class GameLogic implements PlayableLogic {
 
     private void setNewBoard() {
         this.board = new ConcretePiece[BOARD_SIZE][BOARD_SIZE];
+        ConcretePiece.resetLists();
         this.isFinished = false;
         this.attackerTurn = true;
         this.attackerKilled = 0;
@@ -298,7 +322,7 @@ public class GameLogic implements PlayableLogic {
         }
         this.board[5][5] = new King(defender);
 
-        //set each Piece Id
+        //set each Piece id
         int attackerId = 1, defenderId = 1;
         for (int i = 0; i < board.length; i++){
             for (int j = 0; j < board[0].length; j++){
@@ -320,7 +344,15 @@ public class GameLogic implements PlayableLogic {
     public void undoLastMove() {
         if (!boardHistory.isEmpty()) {
             // Pop the previous state from the move history
-            this.board = boardHistory.pop();
+            MoveSnapshot snapshot = boardHistory.pop();
+            ConcretePiece[][] previousState = snapshot.getBoardState();
+            ConcretePiece lastKillingPawn = snapshot.getLastKillingPawn();
+
+            if (lastKillingPawn != null) {
+                ((Pawn)lastKillingPawn).decrementKills();
+            }
+
+            this.board = previousState;
 
             // Toggle the turn back
             attackerTurn = !attackerTurn;
@@ -337,7 +369,7 @@ public class GameLogic implements PlayableLogic {
         }
 
         // Push the current state onto the move history
-        boardHistory.push(currentState);
+        boardHistory.push(new MoveSnapshot(currentState));
     }
 
     @Override

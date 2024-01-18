@@ -3,7 +3,7 @@ import java.util.List;
 
 public class Printer {
 
-    public static void printBoard(ArrayList<ConcretePiece> pieces) {
+    public static void printHistory(ArrayList<ConcretePiece> pieces) {
         // Sort the pieces using the custom comparator
         pieces.sort(new Comparators.HistoryComparator());
 
@@ -26,5 +26,49 @@ public class Printer {
                 System.out.println("]");
             }
         }
+    }
+
+    public static void printKills(ArrayList<ConcretePiece> pieces, ConcretePlayer player){
+        Comparators.setWinner(player);
+
+        pieces.sort(new Comparators.KillsComparator());
+
+        for (ConcretePiece piece : pieces){
+            if (piece instanceof Pawn) {
+                int kills = ((Pawn)piece).getKills();
+                if (kills != 0){
+                    String ownerLetter = piece.getOwner().isPlayerOne() ? "D" : "A";
+                    System.out.print(ownerLetter + piece.getId() + ": ");
+                    System.out.println(kills + " kills");
+                }
+            }
+        }
+
+        //print separator
+        for (int i = 0; i < 75; i++) {
+            System.out.print("*");
+        }
+        System.out.println();
+    }
+
+    public static void printDist(ArrayList<ConcretePiece> pieces, ConcretePlayer player){
+        Comparators.setWinner(player);
+
+        pieces.sort(new Comparators.DistComparator());
+
+        for (ConcretePiece piece : pieces){
+                int dist = piece.getDistance();
+                if (dist != 0){
+                    String ownerLetter = !piece.getOwner().isPlayerOne() ? "A" : piece instanceof King ? "K" : "D";
+                    System.out.print(ownerLetter + piece.getId() + ": ");
+                    System.out.println(dist + " squares");
+                }
+        }
+
+        //print separator
+        for (int i = 0; i < 75; i++) {
+            System.out.print("*");
+        }
+        System.out.println();
     }
 }

@@ -1,6 +1,4 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
 public abstract class ConcretePiece implements Piece{
     protected Player owner;
@@ -8,10 +6,10 @@ public abstract class ConcretePiece implements Piece{
     private static final ArrayList<ConcretePiece> attackerPieces = new ArrayList<>();
     private static final ArrayList<ConcretePiece> defenderPieces = new ArrayList<>();
     private int id;
+    private int distance = 0;
 
     protected ConcretePiece() {
         history = new ArrayList<>();
-
     }
 
     @Override
@@ -20,7 +18,21 @@ public abstract class ConcretePiece implements Piece{
     }
 
     public void updatePosition(Position p){
+        calculateDist(p);
         this.history.add(p);
+    }
+
+    private void calculateDist(Position p) {
+        if (!history.isEmpty()) {
+            Position previousPosition = history.get(history.size() - 1);
+
+            int deltaX = p.getX() - previousPosition.getX();
+            int deltaY = p.getY() - previousPosition.getY();
+
+            int distance = (int) Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            this.distance += distance;
+        }
     }
 
     public ArrayList<Position> getHistory(){
@@ -48,5 +60,14 @@ public abstract class ConcretePiece implements Piece{
         }else {
             attackerPieces.add(piece);
         }
+    }
+
+    public static void resetLists() {
+        attackerPieces.clear();
+        defenderPieces.clear();
+    }
+
+    public int getDistance() {
+        return this.distance;
     }
 }
