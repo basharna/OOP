@@ -1,4 +1,6 @@
 import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
 
 public class Comparators {
     private static ConcretePlayer winner;
@@ -62,6 +64,24 @@ public class Comparators {
                 return Integer.compare(id1, id2);
             }
             return  Integer.compare(dist2, dist1);
+        }
+    }
+
+    public static class PositionComparator implements Comparator<Map.Entry<Position, Set<ConcretePiece>>> {
+        @Override
+        public int compare(Map.Entry<Position, Set<ConcretePiece>> entry1, Map.Entry<Position, Set<ConcretePiece>> entry2) {
+            int pieceAmount1 = entry1.getValue().size();
+            int pieceAmount2 =entry2.getValue().size();
+            int x1 = entry1.getKey().getX();
+            int x2 = entry2.getKey().getX();
+
+            if (pieceAmount1 == pieceAmount2){
+                if (x1 == x2){
+                    return Integer.compare(entry1.getKey().getY(), entry2.getKey().getY());
+                }
+                return Integer.compare(x1, x2);
+            }
+            return Integer.compare(entry2.getValue().size(), entry1.getValue().size());
         }
     }
 }

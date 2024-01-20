@@ -45,11 +45,12 @@ public class GameLogic implements PlayableLogic {
 
     //checks whether a piece should be captured or win game
     private void checkMove(Position b) {
-        if (isCorner(b)) {
+        int x = b.getX();
+        int y = b.getY();
+        if (isCorner(x, y)) {
             winGame(defender);
         } else {
-            int x = b.getX();
-            int y = b.getY();
+
 
             if (board[x][y] instanceof Pawn) {
 
@@ -143,6 +144,8 @@ public class GameLogic implements PlayableLogic {
         //print pieces distance
         Printer.printDist(mergedPieces, winner);
 
+        //print positions
+        Printer.printPositions(ConcretePiece.getPiecesOnSquare());
 
     }
 
@@ -169,7 +172,7 @@ public class GameLogic implements PlayableLogic {
         // Check conditions for both adjacent pieces
         return (isEdge(firstAdjacentX, firstAdjacentY) && !isEdge(currentX, currentY)) ||
                 (secondAdjacentPiece != null && secondAdjacentPiece.getOwner() == currentPiece.getOwner()) ||
-                (isCorner(new Position(secondAdjacentX, secondAdjacentY)));
+                (isCorner(secondAdjacentX, secondAdjacentY));
     }
 
     //checks if a position is on the edge of the board
@@ -222,7 +225,7 @@ public class GameLogic implements PlayableLogic {
             return true;
         }
 
-        if (board[bX][bY] != null || (this.isCorner(b) && this.board[a.getX()][a.getY()] instanceof Pawn)) {
+        if (board[bX][bY] != null || (this.isCorner(bX, bY) && this.board[a.getX()][a.getY()] instanceof Pawn)) {
             return true;
         } else {
             //check obstacle
@@ -244,9 +247,7 @@ public class GameLogic implements PlayableLogic {
     }
 
     //checks if a position is in the corner of the board
-    private boolean isCorner(Position b) {
-        int x = b.getX();
-        int y = b.getY();
+    private boolean isCorner(int x, int y) {
 
         boolean isTopLeft = (x == 0 && y == 0);
         boolean isTopRight = (x == 10 && y == 0);

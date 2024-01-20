@@ -1,10 +1,12 @@
-import java.util.ArrayList;
+import java.util.*;
 
 public abstract class ConcretePiece implements Piece{
     protected Player owner;
     private final ArrayList<Position> history;
+    private static final Map<Position, Set<ConcretePiece>> piecesOnSquare = new HashMap<>();
     private static final ArrayList<ConcretePiece> attackerPieces = new ArrayList<>();
     private static final ArrayList<ConcretePiece> defenderPieces = new ArrayList<>();
+
     private int id;
     private int distance = 0;
 
@@ -20,6 +22,7 @@ public abstract class ConcretePiece implements Piece{
     public void updatePosition(Position p){
         calculateDist(p);
         this.history.add(p);
+        updatePiecesOnSquare(p);
     }
 
     private void calculateDist(Position p) {
@@ -65,9 +68,19 @@ public abstract class ConcretePiece implements Piece{
     public static void resetLists() {
         attackerPieces.clear();
         defenderPieces.clear();
+        piecesOnSquare.clear();
     }
 
     public int getDistance() {
         return this.distance;
+    }
+
+    public static Map<Position, Set<ConcretePiece>> getPiecesOnSquare() {
+        return piecesOnSquare;
+    }
+
+    private void updatePiecesOnSquare(Position p) {
+        piecesOnSquare.computeIfAbsent(p, k -> new HashSet<>()).add(this);
+
     }
 }

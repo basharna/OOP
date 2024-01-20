@@ -17,4 +17,5 @@ public class MoveSnapshot {
     public void setLastKillingPawn(ConcretePiece piece){
         this.lastKillingPawn = piece;
     }
+
 }

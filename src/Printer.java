@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Printer {
 
@@ -63,6 +65,28 @@ public class Printer {
                     System.out.print(ownerLetter + piece.getId() + ": ");
                     System.out.println(dist + " squares");
                 }
+        }
+
+        //print separator
+        for (int i = 0; i < 75; i++) {
+            System.out.print("*");
+        }
+        System.out.println();
+    }
+
+    public static void printPositions(Map<Position, Set<ConcretePiece>> map) {
+        List<Map.Entry<Position, Set<ConcretePiece>>> list = new ArrayList<>(map.entrySet());
+
+        list.sort(new Comparators.PositionComparator());
+
+        for (Map.Entry<Position, Set<ConcretePiece>> entry : list){
+            int x = entry.getKey().getX();
+            int y = entry.getKey().getY();
+            int amount = entry.getValue().size();
+            if (amount > 1) {
+                System.out.print("(" + x + ", " + y + ")" + amount + " pieces");
+                System.out.println();
+            }
         }
 
         //print separator
